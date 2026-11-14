@@ -177,7 +177,7 @@ function initRealbuzzForms() {
             }));
           } catch (_) { /* Payment remains available when browser storage is blocked. */ }
         } else {
-          payment.textContent = "Заявка сохранена. Реквизиты оплаты сейчас недоступны. Напишите @Savkin_1337 в Telegram — поможем с оплатой. Повторно отправлять заявку не нужно.";
+          payment.textContent = "Заявка сохранена. Реквизиты оплаты сейчас недоступны. Напишите на realbuzzmanager@yandex.ru — поможем с оплатой. Повторно отправлять заявку не нужно.";
         }
         form.hidden = true;
         form.after(payment);
@@ -187,7 +187,7 @@ function initRealbuzzForms() {
         trackGoal("rb_lead_error", form, selectedPlan && selectedPlan.dataset.planId);
         if (message) {
           message.dataset.state = "error";
-          message.textContent = "Не удалось подтвердить сохранение заявки. Нажмите «Отправить заявку» ещё раз — повторная отправка тех же данных не создаст дубль. Или напишите нам в Telegram.";
+          message.textContent = "Не удалось подтвердить сохранение заявки. Нажмите «Отправить заявку» ещё раз — повторная отправка тех же данных не создаст дубль. Или напишите на realbuzzmanager@yandex.ru.";
           message.classList.add("is-visible");
         }
       } finally {
