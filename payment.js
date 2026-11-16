@@ -1,6 +1,9 @@
+// Payment switch: 'bank' or 'prodamus'. Bank transfers are verified manually.
+window.ORDER_PAYMENT_MODE = 'bank';
+
 window.renderOrderPayment = function (container, order) {
   var paidSupport = order.paymentStatus === 'Оплачено' ? '<p class="payment-support">Есть вопросы по заказу? <a href="https://t.me/Savkin_1337" target="_blank" rel="noopener noreferrer">Напишите нам в Telegram</a>.</p>' : '';
-  if (order.provider === 'prodamus' || order.paymentStatus === 'Оплачено') {
+  if (window.ORDER_PAYMENT_MODE === 'prodamus' || order.paymentStatus === 'Оплачено') {
     container.innerHTML = '<section class="order-payment" aria-label="Оплата заявки" data-clarity-mask="true"><h3 data-heading></h3>' +
       '<dl class="order-summary"><div><dt>Номер заявки</dt><dd data-order-id></dd></div><div><dt>Пакет</dt><dd data-order-plan></dd></div><div><dt>К оплате</dt><dd class="order-amount" data-order-amount></dd></div></dl>' +
       '<p data-payment-message></p>' + paidSupport + '</section>';
@@ -10,7 +13,7 @@ window.renderOrderPayment = function (container, order) {
     container.querySelector('[data-order-amount]').textContent = order.amount.toLocaleString('ru-RU') + ' ₽';
     var message = container.querySelector('[data-payment-message]');
     if (order.paymentStatus === 'Оплачено') message.textContent = 'Оплата получена.';
-    else if (order.paymentUrl) {
+    else if (order.provider === 'prodamus' && order.paymentUrl) {
       message.textContent = 'Оплатите выбранный пакет. Сумма уже указана на странице оплаты.';
       var link = document.createElement('a');
       link.className = 'payment-prodamus-button';
