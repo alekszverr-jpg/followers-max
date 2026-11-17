@@ -168,7 +168,8 @@ function initRealbuzzForms() {
             } catch (error) { /* Ignore malformed payment URLs. */ }
           }
           window.renderOrderPayment(payment, { requestId: result.requestId, amount: amount, plan: payload.plan,
-            provider: result.paymentProvider === "prodamus" ? "prodamus" : undefined,
+            provider: result.paymentProvider === "prodamus" || result.paymentProvider === "payanyway" ? result.paymentProvider : undefined,
+            paymentForm: window.validatePayAnyWayForm(result.paymentForm, result.requestId, amount),
             paymentUrl: paymentUrl, paymentStatus: result.paymentStatus });
           try {
             sessionStorage.setItem('prodamus.order.' + result.requestId, JSON.stringify({
