@@ -159,16 +159,19 @@ function initRealbuzzForms() {
         payment.className = "order-result";
         payment.tabIndex = -1;
         payment.setAttribute("role", "status");
-        if (typeof result.requestId === "string" && /^RB-[A-Z0-9-]{6,40}$/.test(result.requestId) && result.amount === amount && ["Не проверена", "Оплачено"].includes(result.paymentStatus)) {
+        var provider = ["bank", "prodamus", "payanyway", "yookassa"].includes(result.paymentProvider) ? result.paymentProvider : undefined;
+        var statuses = provider === "yookassa" ? ["Не проверена", "Оплачено", "Отменена", "Тестовая оплата"] : ["Не проверена", "Оплачено"];
+        if (typeof result.requestId === "string" && /^RB-[A-Z0-9-]{6,40}$/.test(result.requestId) && result.amount === amount && statuses.includes(result.paymentStatus)) {
           var paymentUrl;
-          if (result.paymentProvider === "prodamus" && typeof result.paymentUrl === "string") {
+          if ((provider === "prodamus" || provider === "yookassa") && typeof result.paymentUrl === "string") {
             try {
               var url = new URL(result.paymentUrl);
-              if (url.origin === "https://realbuzz.payform.ru" && !url.username && !url.password) paymentUrl = url.href;
+              var allowedOrigins = provider === "yookassa" ? ["https://yoomoney.ru", "https://yookassa.ru"] : ["https://realbuzz.payform.ru"];
+              if (url.protocol === "https:" && allowedOrigins.includes(url.origin) && !url.username && !url.password) paymentUrl = url.href;
             } catch (error) { /* Ignore malformed payment URLs. */ }
           }
           window.renderOrderPayment(payment, { requestId: result.requestId, amount: amount, plan: payload.plan,
-            provider: result.paymentProvider === "prodamus" || result.paymentProvider === "payanyway" ? result.paymentProvider : undefined,
+            provider: provider, providerLocked: result.paymentProviderLocked === true,
             paymentForm: window.validatePayAnyWayForm(result.paymentForm, result.requestId, amount),
             paymentUrl: paymentUrl, paymentStatus: result.paymentStatus });
           try {

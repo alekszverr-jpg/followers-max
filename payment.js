@@ -26,34 +26,42 @@ function validatePayAnyWayForm(value, requestId, amount) {
 }
 
 window.validatePayAnyWayForm = validatePayAnyWayForm;
-// Payment switch: 'bank', 'prodamus' or 'payanyway'. Bank transfers are verified manually.
+// Match the Apps Script payment mode for new orders: 'bank', 'prodamus', 'payanyway' or 'yookassa'.
 window.ORDER_PAYMENT_MODE = 'bank';
 
 window.renderOrderPayment = function (container, order) {
+  var mode = order.provider && (order.providerLocked || order.provider === 'yookassa') ? order.provider : window.ORDER_PAYMENT_MODE;
+  var testPaid = order.paymentStatus === 'Тестовая оплата';
+  var canceled = order.paymentStatus === 'Отменена';
   var paidSupport = order.paymentStatus === 'Оплачено' ? '<p class="payment-support">Есть вопросы по заказу? <a href="https://t.me/Savkin_1337" target="_blank" rel="noopener noreferrer">Напишите нам в Telegram</a>.</p>' : '';
-  if (window.ORDER_PAYMENT_MODE === 'prodamus' || window.ORDER_PAYMENT_MODE === 'payanyway' || order.paymentStatus === 'Оплачено') {
+  if (['yookassa', 'prodamus', 'payanyway'].includes(mode) || order.paymentStatus === 'Оплачено') {
     container.innerHTML = '<section class="order-payment" aria-label="Оплата заявки" data-clarity-mask="true"><h3 data-heading></h3>' +
       '<dl class="order-summary"><div><dt>Номер заявки</dt><dd data-order-id></dd></div><div><dt>Пакет</dt><dd data-order-plan></dd></div><div><dt>К оплате</dt><dd class="order-amount" data-order-amount></dd></div></dl>' +
       '<p data-payment-message></p>' + paidSupport + '</section>';
-    container.querySelector('[data-heading]').textContent = order.paymentStatus === 'Оплачено' ? 'Заказ оплачен' : 'Заявка сохранена — можно оплатить';
+    container.querySelector('[data-heading]').textContent = order.paymentStatus === 'Оплачено' ? 'Заказ оплачен' :
+      testPaid ? 'Тестовый платёж прошёл' : canceled ? 'Платёж отменён' : 'Заявка сохранена — можно оплатить';
     container.querySelector('[data-order-id]').textContent = order.requestId;
     container.querySelector('[data-order-plan]').textContent = order.plan;
     container.querySelector('[data-order-amount]').textContent = order.amount.toLocaleString('ru-RU') + ' ₽';
     var message = container.querySelector('[data-payment-message]');
     if (order.paymentStatus === 'Оплачено') message.textContent = 'Оплата получена.';
-    else if (window.ORDER_PAYMENT_MODE === 'payanyway' && order.provider === 'payanyway' && validatePayAnyWayForm(order.paymentForm, order.requestId, order.amount)) {
+    else if (testPaid) message.textContent = 'Тестовый заказ сохранён.';
+    else if (mode === 'payanyway' && order.provider === 'payanyway' && validatePayAnyWayForm(order.paymentForm, order.requestId, order.amount)) {
       message.textContent = 'Оплатите выбранный пакет. Сумма уже указана на странице оплаты.';
       var form = document.createElement('form');
       form.action = order.paymentForm.action; form.method = 'post';
       Object.keys(order.paymentForm.fields).forEach(function(name) { var input = document.createElement('input'); input.type = 'hidden'; input.name = name; input.value = order.paymentForm.fields[name]; form.appendChild(input); });
       var button = document.createElement('button'); button.type = 'submit'; button.className = 'payment-prodamus-button'; button.textContent = 'Оплатить'; form.appendChild(button); message.after(form);
-    } else if (window.ORDER_PAYMENT_MODE === 'prodamus' && order.provider === 'prodamus' && order.paymentUrl) {
+    } else if (!canceled && (mode === 'yookassa' || mode === 'prodamus') && order.provider === mode && order.paymentUrl) {
       message.textContent = 'Оплатите выбранный пакет. Сумма уже указана на странице оплаты.';
       var link = document.createElement('a');
       link.className = 'payment-prodamus-button';
       link.href = order.paymentUrl;
-      link.textContent = 'Оплатить';
+      link.textContent = mode === 'yookassa' ? 'Оплатить через ЮKassa' : 'Оплатить';
+      if (mode === 'yookassa') link.rel = 'noreferrer';
       message.after(link);
+    } else if (mode === 'yookassa') {
+      message.textContent = 'Ссылка на оплату недоступна. Напишите на realbuzzmanager@yandex.ru и укажите номер заявки.';
     } else message.textContent = 'Оплата временно недоступна. Попробуйте чуть позже или напишите на realbuzzmanager@yandex.ru.';
     return;
   }
