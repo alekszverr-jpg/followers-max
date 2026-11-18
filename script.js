@@ -128,6 +128,7 @@ function initRealbuzzForms() {
         planId: selectedPlan ? selectedPlan.dataset.planId : "",
         audience: formData.get("audience") || "",
         attribution: attribution,
+        supportsYooKassa: true,
       };
       var signature = JSON.stringify(payload);
       var requestTimer;
